@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 직무 성향 검사</title>
+<style>
+  :root{
+    --bg:#0A0B10; --card:#14161F; --card2:#191C27;
+    --line:#262A38; --txt:#EAECF4; --muted:#888FA3;
+    --proto:#F5A524; --build:#7C6CF6; --sweep:#22D3EE; --grow:#34D399; --main:#60A5FA;
+    --accentA:#7C6CF6; --accentB:#22D3EE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Pretendard,"Apple SD Gothic Neo",Roboto,"Malgun Gothic",sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:660px;margin:0 auto;padding:32px 20px 64px;min-height:100vh}
+  .screen{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+
+  /* ---------- intro ---------- */
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:clamp(30px,7vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin:14px 0 0}
+  h1 .grad{background:linear-gradient(90deg,var(--accentA),var(--accentB));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--muted);font-size:16px;margin-top:16px;max-width:52ch}
+  .types-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:28px}
+  .tchip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}
+  .tchip .em{font-size:22px}
+  .tchip .nm{font-size:13px;font-weight:700;margin-top:6px}
+  .tchip .role{font-size:11px;color:var(--muted);margin-top:2px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(90deg,var(--accentA),var(--accentB));color:#fff;border:none;
+    font-size:16px;font-weight:700;padding:16px 30px;border-radius:14px;cursor:pointer;
+    margin-top:32px;width:100%;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px -12px var(--accentA)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 40px -12px var(--accentA)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:var(--card);color:var(--txt);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{border-color:#3a4054;background:var(--card2)}
+  .foot{margin-top:22px;font-size:12.5px;color:var(--muted)}
+
+  /* ---------- quiz ---------- */
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:36px}
+  .back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:4px 6px;border-radius:8px;visibility:hidden}
+  .back:hover{color:var(--txt);background:var(--card)}
+  .bar{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accentA),var(--accentB));transition:width .4s cubic-bezier(.2,.7,.2,1)}
+  .count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+  .qnum{font-size:12px;letter-spacing:.14em;color:var(--accentB);font-weight:700;text-transform:uppercase}
+  .q{font-size:clamp(21px,4.6vw,27px);font-weight:700;letter-spacing:-.01em;margin-top:12px;min-height:2.4em}
+  .likert{margin-top:40px}
+  .dots{display:flex;align-items:center;justify-content:space-between;gap:2px}
+  .dot{border-radius:50%;border:2px solid var(--line);background:transparent;cursor:pointer;
+    transition:transform .15s,background .15s,border-color .15s,box-shadow .15s;position:relative;flex:0 0 auto}
+  .dot:hover{transform:scale(1.12)}
+  .dot.sel{transform:scale(1.06)}
+  .dot.s1{width:56px;height:56px;border-color:#F87171}
+  .dot.s2{width:46px;height:46px;border-color:#F8A0A0}
+  .dot.s3{width:38px;height:38px;border-color:#8A90A3}
+  .dot.s4{width:46px;height:46px;border-color:#86E6A6}
+  .dot.s5{width:56px;height:56px;border-color:#4ADE80}
+  .dot.s1.sel,.dot.s1:hover{background:#F87171;box-shadow:0 0 22px -6px #F87171}
+  .dot.s2.sel,.dot.s2:hover{background:#F8A0A0;box-shadow:0 0 22px -6px #F8A0A0}
+  .dot.s3.sel,.dot.s3:hover{background:#8A90A3;box-shadow:0 0 22px -6px #8A90A3}
+  .dot.s4.sel,.dot.s4:hover{background:#86E6A6;box-shadow:0 0 22px -6px #86E6A6}
+  .dot.s5.sel,.dot.s5:hover{background:#4ADE80;box-shadow:0 0 22px -6px #4ADE80}
+  .scale-lbl{display:flex;justify-content:space-between;margin-top:16px;font-size:12.5px;color:var(--muted)}
+  .hint{margin-top:26px;font-size:12px;color:#5a6072;text-align:center}
+  .hint kbd{background:var(--card2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px;color:var(--muted)}
+
+  /* ---------- result ---------- */
+  .r-eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:center}
+  .hero-type{text-align:center;margin-top:14px;animation:pop .5s .05s both}
+  .hero-em{font-size:60px;line-height:1}
+  .hero-nm{font-size:clamp(30px,8vw,42px);font-weight:800;letter-spacing:-.02em;margin-top:8px}
+  .hero-tag{color:var(--muted);font-size:15.5px;margin-top:8px;max-width:44ch;margin-left:auto;margin-right:auto}
+  .radar-box{display:flex;justify-content:center;margin:14px 0 4px}
+  svg .grid{fill:none;stroke:var(--line);stroke-width:1}
+  svg .spoke{stroke:var(--line);stroke-width:1}
+  svg .lbl{font-size:12.5px;font-weight:700;fill:var(--muted)}
+  .desc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-top:20px;font-size:15px;color:#c8cddb}
+  .bars{margin-top:24px;display:flex;flex-direction:column;gap:14px}
+  .brow{display:flex;align-items:center;gap:12px}
+  .brow .bnm{width:92px;flex:0 0 auto;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .brow .btrack{flex:1;height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+  .brow .bfill{height:100%;border-radius:99px;width:0;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .brow .bpct{width:42px;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .blend{margin-top:22px;background:linear-gradient(180deg,rgba(124,108,246,.09),rgba(34,211,238,.05));
+    border:1px solid var(--line);border-radius:16px;padding:18px 20px;font-size:14.5px}
+  .blend b{color:var(--txt)}
+  .r-actions{display:flex;gap:10px;margin-top:26px}
+  .r-actions .btn{margin-top:0}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:12px 20px;border-radius:12px;
+    font-size:14px;transition:all .3s;pointer-events:none;z-index:10}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .btn.full{margin-top:10px}
+  .share-hint{margin-top:16px;font-size:12px;color:#5a6072;text-align:center;line-height:1.7}
+  .disc{margin-top:20px;font-size:12px;color:#5a6072;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast">결과 요약을 복사했어요</div>
+
+<script>
+/* ---------------- data ---------------- */
+const TYPES = {
+  proto:{name:"프로토타이퍼", em:"🧪", color:"var(--proto)", role:"실험가", verb:"빠르게 던지고",
+    tag:"완성보다 가능성. 될지 안 될지는 만들어보고 판단하는 사람.",
+    desc:"완성도보다 가능성에 끌립니다. 0에서 0.1을 수십 번 만들어내며, 남들이 회의로 따질 때 이미 프로토타입을 돌려보고 있죠. 버려지는 시도가 아깝지 않은 건, 매번 배운 게 남기 때문입니다."},
+  build:{name:"빌더", em:"🛠️", color:"var(--build)", role:"실행가", verb:"현실로 만들고",
+    tag:"아이디어를 작동하는 현실로 끌어올리는 사람.",
+    desc:"머릿속 개념이 실제로 돌아가는 물건이 될 때 가장 신이 납니다. 0.1을 1로 만드는 데 진심이고, 막히면 우회로를 뚫어서라도 기어이 작동시키죠. 백 마디 설명보다 데모 하나가 이긴다고 믿습니다."},
+  sweep:{name:"스위퍼", em:"🧹", color:"var(--sweep)", role:"정리가", verb:"군더더기를 덜어내고",
+    tag:"복잡함을 걷어내 본질만 남기는 사람.",
+    desc:"복잡한 걸 보면 손이 근질거립니다. 불필요한 기능과 코드를 걷어내고, 같은 결과라면 더 빠르고 가벼운 길을 찾아내죠. '이거 꼭 필요해?' 한 마디로 시스템을 날씬하게 만드는 빼기의 미학."},
+  grow:{name:"그로워", em:"📈", color:"var(--grow)", role:"재배가", verb:"시장에 맞춰 키우고",
+    tag:"제품을 붙들고 시장에 맞춰 끝없이 키우는 사람.",
+    desc:"다 만든 뒤가 진짜 시작이라 믿습니다. 사용자 반응과 데이터를 보며 끝없이 고쳐 1을 10으로 키우죠. 작은 지표 하나에도 크게 움직이는, PMF를 향한 집요한 반복러입니다."},
+  main:{name:"메인테이너", em:"🛡️", color:"var(--main)", role:"수호자", verb:"굳건히 지킨다",
+    tag:"커진 서비스를 굳건히 떠받치는 사람.",
+    desc:"화려한 신기능보다 안 무너지는 안정성이 먼저 보입니다. 남들이 지나친 리스크와 엣지케이스를 잡아내고, 문서·모니터링·보안으로 서비스를 떠받치죠. 10을 무한대로 지켜내는 사람입니다."}
+};
+const AXES = ["proto","build","sweep","grow","main"]; // radar order, clockwise from top
+
+const BANK = [
+  ["proto","아이디어가 떠오르면 완성도를 따지기 전에 일단 만들어본다."],
+  ["proto","하나를 깊게 파기보다 여러 개를 빠르게 시도해보는 편이다."],
+  ["proto","새로운 도구나 기술이 나오면 남들보다 먼저 만져봐야 직성이 풀린다."],
+  ["proto","안 될 것 같아도 일단 실험해봐야 판단이 선다."],
+  ["proto","내가 만든 게 버려져도 크게 아깝지 않다. 배운 게 남으니까."],
+  ["build","아이디어가 실제로 '돌아가는 물건'이 될 때 가장 신이 난다."],
+  ["build","설계부터 배포까지 끝까지 내 손으로 굴려야 만족스럽다."],
+  ["build","막혀도 우회로를 찾아서라도 결국 작동하게 만든다."],
+  ["build","일단 되게 만드는 속도가 주변보다 빠른 편이다."],
+  ["build","말로 하는 설명보다 작동하는 데모가 훨씬 설득력 있다고 믿는다."],
+  ["sweep","복잡한 걸 보면 덜어내서 단순하게 만들고 싶어진다."],
+  ["sweep","불필요한 기능이나 코드를 걷어낼 때 쾌감을 느낀다."],
+  ["sweep","같은 결과라면 더 빠르고 가벼운 방법을 기어이 찾아낸다."],
+  ["sweep","\"이거 꼭 필요한가?\"라는 질문을 자주 던진다."],
+  ["sweep","지저분한 구조를 깔끔하게 정리하는 것 자체가 즐겁다."],
+  ["grow","다 만든 제품을 붙들고 계속 고치는 과정이 지겹지 않다."],
+  ["grow","사용자 반응과 데이터를 보고 다음 개선을 정하는 게 즐겁다."],
+  ["grow","'완성'보다 '더 나아지게' 만드는 데 집착한다."],
+  ["grow","시장과 사용자가 진짜 원하는 게 뭔지 계속 파고든다."],
+  ["grow","작은 지표 하나가 개선돼도 크게 동기부여된다."],
+  ["main","서비스가 커질수록 화려함보다 안정성과 보안이 먼저 걱정된다."],
+  ["main","장애 없이 굳건히 돌아가는 걸 볼 때 가장 뿌듯하다."],
+  ["main","남들이 지나치는 리스크나 엣지케이스가 자꾸 눈에 띈다."],
+  ["main","신기능보다 탄탄한 운영과 효율이 더 중요하다고 본다."],
+  ["main","문서·모니터링·규칙을 갖춰두는 걸 귀찮아하지 않는다."]
+];
+const SCALE = ["전혀 아니다","아니다","보통","그렇다","매우 그렇다"];
+
+/* ---------------- state ---------------- */
+let questions=[], answers=[], idx=0;
+const app=document.getElementById("app");
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------------- screens ---------------- */
+function intro(){
+  const chips=Object.keys(TYPES).map(k=>{const t=TYPES[k];
+    return `<div class="tchip"><div class="em">${t.em}</div><div class="nm">${t.name}</div><div class="role">${t.role}</div></div>`}).join("");
+  app.innerHTML=`<div class="screen">
+    <div class="eyebrow">AI 시대 직무 성향 검사</div>
+    <h1>당신은 팀에서<br><span class="grad">어떤 역할</span>로 빛나나요?</h1>
+    <p class="lede">아이디어를 던지는 사람, 되게 만드는 사람, 덜어내는 사람, 키우는 사람, 지키는 사람.
+      25개의 문항으로 다섯 축을 재고, 당신의 대표 성향과 프로파일을 그려드려요. 약 3분.</p>
+    <div class="types-grid">${chips}</div>
+    <button class="btn" onclick="start()">검사 시작하기 →</button>
+    <p class="foot">정답은 없어요. 이상적인 모습이 아니라 '평소의 나'에 가깝게 답할수록 정확해집니다.</p>
+  </div>`;
+}
+function start(){questions=shuffle(BANK);answers=new Array(questions.length).fill(null);idx=0;renderQ()}
+
+function renderQ(){
+  const [type,text]=questions[idx];
+  const total=questions.length;
+  const pct=(idx/total)*100;
+  const cur=answers[idx];
+  const dots=[1,2,3,4,5].map(v=>
+    `<button class="dot s${v} ${cur===v?'sel':''}" data-v="${v}" onclick="answer(${v})" aria-label="${SCALE[v-1]}"></button>`).join("");
+  app.innerHTML=`<div class="screen">
+    <div class="topbar">
+      <button class="back" id="backBtn" onclick="back()">←</button>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="count">${idx+1} / ${total}</div>
+    </div>
+    <div class="qnum">Q${String(idx+1).padStart(2,'0')}</div>
+    <div class="q">${text}</div>
+    <div class="likert">
+      <div class="dots">${dots}</div>
+      <div class="scale-lbl"><span>전혀 아니다</span><span>매우 그렇다</span></div>
+    </div>
+    <div class="hint"><kbd>1</kbd>–<kbd>5</kbd> 키로 선택 · <kbd>←</kbd> 이전</div>
+  </div>`;
+  document.getElementById("backBtn").style.visibility = idx>0?"visible":"hidden";
+}
+function answer(v){
+  answers[idx]=v;
+  document.querySelectorAll(".dot").forEach(d=>d.classList.toggle("sel",+d.dataset.v===v));
+  setTimeout(()=>{ if(idx<questions.length-1){idx++;renderQ()} else result() },170);
+}
+function back(){if(idx>0){idx--;renderQ()}}
+document.addEventListener("keydown",e=>{
+  if(!questions.length) return;
+  if(app.querySelector(".q")){
+    if(e.key>="1"&&e.key<="5") answer(+e.key);
+    else if(e.key==="Backspace"||e.key==="ArrowLeft"){e.preventDefault();back()}
+  }
+});
+
+/* ---------------- scoring + result ---------------- */
+function scores(){
+  const sum={},cnt={};
+  AXES.forEach(k=>{sum[k]=0;cnt[k]=0});
+  questions.forEach((q,i)=>{sum[q[0]]+=answers[i];cnt[q[0]]++});
+  const out={};
+  AXES.forEach(k=>{out[k]=Math.round(((sum[k]-cnt[k])/(cnt[k]*4))*100)}); // 0..100
+  return out;
+}
+function radarSVG(sc){
+  const W=360,H=300,cx=180,cy=145,R=92,LR=R+22;
+  const pt=(i,val)=>{const a=(-90+i*72)*Math.PI/180;return [cx+R*val*Math.cos(a),cy+R*val*Math.sin(a)]};
+  const lp=i=>{const a=(-90+i*72)*Math.PI/180;return [cx+LR*Math.cos(a),cy+LR*Math.sin(a),Math.cos(a),Math.sin(a)]};
+  let grid="";
+  [0.25,0.5,0.75,1].forEach(l=>{
+    const p=AXES.map((_,i)=>pt(i,l).join(",")).join(" ");
+    grid+=`<polygon class="grid" points="${p}"/>`;
+  });
+  let spokes="",labels="",dots="";
+  AXES.forEach((k,i)=>{
+    const e=pt(i,1);spokes+=`<line class="spoke" x1="${cx}" y1="${cy}" x2="${e[0]}" y2="${e[1]}"/>`;
+    const [lx,ly,cxx]=lp(i);
+    const anchor=cxx>0.25?"start":cxx<-0.25?"end":"middle";
+    const dy=ly<cy-20?-2:ly>cy+20?12:4;
+    labels+=`<text class="lbl" x="${lx}" y="${ly+dy}" text-anchor="${anchor}" style="fill:${TYPES[k].color}">${TYPES[k].name}</text>`;
+  });
+  const dataPts=AXES.map((k,i)=>pt(i,sc[k]/100));
+  const poly=dataPts.map(p=>p.join(",")).join(" ");
+  AXES.forEach((k,i)=>{const p=dataPts[i];dots+=`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${TYPES[k].color}"/>`});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:380px;overflow:visible">
+    <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="var(--accentA)"/><stop offset="1" stop-color="var(--accentB)"/>
+    </linearGradient></defs>
+    ${grid}${spokes}
+    <polygon points="${poly}" fill="url(#rg)" fill-opacity="0.22" stroke="url(#rg)" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+function result(){
+  const sc=scores();
+  const ranked=AXES.slice().sort((a,b)=>sc[b]-sc[a]);
+  const p=ranked[0], s=ranked[1];
+  LAST={sc,p,s};
+  const T=TYPES, tp=T[p], ts=T[s];
+  const bars=ranked.map(k=>{const t=T[k];
+    return `<div class="brow">
+      <div class="bnm"><span>${t.em}</span>${t.name}</div>
+      <div class="btrack"><div class="bfill" data-w="${sc[k]}" style="background:${t.color}"></div></div>
+      <div class="bpct">${sc[k]}%</div>
+    </div>`}).join("");
+  app.innerHTML=`<div class="screen">
+    <div class="r-eyebrow">당신의 대표 성향</div>
+    <div class="hero-type">
+      <div class="hero-em">${tp.em}</div>
+      <div class="hero-nm" style="color:${tp.color}">${tp.name}</div>
+      <div class="hero-tag">${tp.tag}</div>
+    </div>
+    <div class="radar-box">${radarSVG(sc)}</div>
+    <div class="desc">${tp.desc}</div>
+    <div class="bars">${bars}</div>
+    <div class="blend">
+      <b>${tp.name} × ${ts.name}</b> — ${tp.verb.replace(/다$/,'는')} 힘에 ${ts.name}의 감각을 더한 조합이에요.
+      대표 성향은 <b>${tp.name}</b>이지만 <b>${ts.name}</b> 기질도 뚜렷하니, 두 축을 함께 쓰는 자리에서 가장 강합니다.
+    </div>
+    <div class="r-actions">
+      <button class="btn ghost" onclick="copyImage()">이미지 복사</button>
+      <button class="btn" onclick="shareImage()">공유하기</button>
+    </div>
+    <button class="btn ghost full" onclick="init()">다시 하기</button>
+    <p class="share-hint">복사·공유가 막혀 있으면 이미지로 저장돼요. 모바일은 저장된 이미지를 길게 눌러 공유하면 됩니다.</p>
+    <p class="disc">재미로 보는 성향 테스트예요. 절대적인 분류가 아니라,<br>지금의 나를 비추는 거울 정도로 봐주세요.</p>
+  </div>`;
+  requestAnimationFrame(()=>{setTimeout(()=>{
+    document.querySelectorAll(".bfill").forEach(b=>b.style.width=b.dataset.w+"%")},60)});
+}
+/* ---------------- share card (image) ---------------- */
+let LAST=null;
+const COL={proto:"#F5A524",build:"#7C6CF6",sweep:"#22D3EE",grow:"#34D399",main:"#60A5FA"};
+const CBG="#14161F",CBG2="#0F1117",CLINE="#262A38",CTXT="#EAECF4",CMUT="#8B92A6",CA="#7C6CF6",CB="#22D3EE",CDIM="#5a6072";
+const CFONT="-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+
+function hexA(h,a){const n=parseInt(h.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`}
+function rpt(cx,cy,R,i,v){const a=(-90+i*72)*Math.PI/180;return [cx+R*v*Math.cos(a),cy+R*v*Math.sin(a)]}
+function rlp(cx,cy,LR,i){const a=(-90+i*72)*Math.PI/180;return [cx+LR*Math.cos(a),cy+LR*Math.sin(a),Math.cos(a),Math.sin(a)]}
+function wrapText(ctx,text,maxW){const words=text.split(/\s+/),lines=[];let cur="";
+  for(const w of words){const t=cur?cur+" "+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else cur=t}
+  if(cur)lines.push(cur);return lines}
+function rrect(ctx,x,y,w,h,r){if(w<=0)return;r=Math.min(r,w/2,h/2);
+  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(x,y,w,h,r);return}
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
+function drawRadar(ctx,cx,cy,R,sc){
+  ctx.strokeStyle=CLINE;ctx.lineWidth=1;
+  [0.25,0.5,0.75,1].forEach(l=>{ctx.beginPath();
+    AXES.forEach((k,i)=>{const q=rpt(cx,cy,R,i,l);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});
+    ctx.closePath();ctx.stroke()});
+  AXES.forEach((k,i)=>{const q=rpt(cx,cy,R,i,1);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(q[0],q[1]);ctx.stroke()});
+  const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);g.addColorStop(0,CA);g.addColorStop(1,CB);
+  ctx.beginPath();
+  AXES.forEach((k,i)=>{const q=rpt(cx,cy,R,i,sc[k]/100);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});
+  ctx.closePath();
+  ctx.globalAlpha=0.22;ctx.fillStyle=g;ctx.fill();ctx.globalAlpha=1;
+  ctx.lineWidth=2;ctx.strokeStyle=g;ctx.lineJoin="round";ctx.stroke();
+  AXES.forEach((k,i)=>{
+    const q=rpt(cx,cy,R,i,sc[k]/100);
+    ctx.beginPath();ctx.arc(q[0],q[1],4.5,0,7);ctx.fillStyle=COL[k];ctx.fill();
+    const lp=rlp(cx,cy,R+22,i);
+    ctx.fillStyle=COL[k];ctx.font="700 12.5px "+CFONT;
+    ctx.textAlign=lp[2]>0.25?"left":lp[2]<-0.25?"right":"center";
+    ctx.textBaseline=lp[3]<-0.2?"bottom":lp[3]>0.2?"top":"middle";
+    ctx.fillText(TYPES[k].name,lp[0],lp[1]);
+  });
+  ctx.textBaseline="alphabetic";
+}
+
+function renderCardCanvas(){
+  const sc=LAST.sc,p=LAST.p;
+  const W=640,PAD=44,scale=2;
+  const mc=document.createElement("canvas").getContext("2d");
+  mc.font="17px "+CFONT;
+  const tagLines=wrapText(mc,TYPES[p].tag,W-PAD*2-40);
+  const tagLH=25,yTagTop=232,tagBottom=yTagTop+(tagLines.length-1)*tagLH;
+  const R=120,cx=W/2,cy=tagBottom+46+R,radarBottom=cy+R+34;
+  const yDiv=radarBottom+16;
+  const rows=AXES.slice().sort((a,b)=>sc[b]-sc[a]);
+  const rowH=34,rowsTop=yDiv+30,rowsBottom=rowsTop+(rows.length-1)*rowH;
+  const yFoot=rowsBottom+44,H=yFoot+28;
+
+  const c=document.createElement("canvas");
+  c.width=W*scale;c.height=H*scale;
+  const ctx=c.getContext("2d");ctx.scale(scale,scale);
+
+  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,CBG);bg.addColorStop(1,CBG2);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(W/2,86,10,W/2,86,270);
+  glow.addColorStop(0,hexA(COL[p],0.20));glow.addColorStop(1,hexA(COL[p],0));
+  ctx.fillStyle=glow;ctx.fillRect(0,0,W,300);
+
+  ctx.textAlign="center";ctx.textBaseline="alphabetic";
+  ctx.fillStyle=CMUT;ctx.font="700 12px "+CFONT;
+  const ls="letterSpacing" in ctx;if(ls)ctx.letterSpacing="2px";
+  ctx.fillText("AI 직무 성향 검사",W/2,52);
+  if(ls)ctx.letterSpacing="0px";
+
+  ctx.textBaseline="middle";ctx.font="58px "+CFONT;
+  ctx.fillText(TYPES[p].em,W/2,118);
+  ctx.textBaseline="alphabetic";
+
+  ctx.fillStyle=COL[p];ctx.font="800 40px "+CFONT;
+  ctx.fillText(TYPES[p].name,W/2,196);
+
+  ctx.fillStyle=CMUT;ctx.font="17px "+CFONT;
+  tagLines.forEach((ln,i)=>ctx.fillText(ln,W/2,yTagTop+i*tagLH));
+
+  drawRadar(ctx,cx,cy,R,sc);
+
+  ctx.strokeStyle=CLINE;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,yDiv);ctx.lineTo(W-PAD,yDiv);ctx.stroke();
+
+  rows.forEach((k,i)=>{
+    const y=rowsTop+i*rowH;
+    ctx.beginPath();ctx.arc(PAD+6,y,6,0,7);ctx.fillStyle=COL[k];ctx.fill();
+    ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillStyle=CTXT;ctx.font="700 15px "+CFONT;
+    ctx.fillText(TYPES[k].name,PAD+22,y+5);
+    const bx=250,bxEnd=W-PAD-46,bw=bxEnd-bx,by=y-5,bh=10;
+    rrect(ctx,bx,by,bw,bh,5);ctx.fillStyle=CLINE;ctx.fill();
+    rrect(ctx,bx,by,bw*sc[k]/100,bh,5);ctx.fillStyle=COL[k];ctx.fill();
+    ctx.textAlign="right";ctx.fillStyle=CMUT;ctx.font="14px "+CFONT;
+    ctx.fillText(sc[k]+"%",W-PAD,y+5);
+  });
+
+  ctx.textAlign="center";ctx.fillStyle=CDIM;ctx.font="12px "+CFONT;
+  ctx.fillText("재미로 보는 성향 검사 · 지금의 나를 비추는 거울",W/2,yFoot);
+  return c;
+}
+
+function cardBlobSync(){
+  const url=renderCardCanvas().toDataURL("image/png");
+  const bin=atob(url.split(",")[1]);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:"image/png"});
+}
+function downloadBlob(blob,name="ai-job-type.png"){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;
+  t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2100)}
+
+async function copyImage(){
+  if(!LAST)return;
+  try{
+    if(!window.ClipboardItem||!navigator.clipboard) throw 0;
+    const blob=cardBlobSync();
+    await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+    toast("결과 이미지를 복사했어요");
+  }catch(e){
+    try{downloadBlob(cardBlobSync());toast("복사가 막혀 있어 이미지로 저장했어요");}
+    catch(_){toast("이미지 생성에 실패했어요")}
+  }
+}
+async function shareImage(){
+  if(!LAST)return;
+  let blob;try{blob=cardBlobSync()}catch(_){toast("이미지 생성에 실패했어요");return}
+  const file=new File([blob],"ai-job-type.png",{type:"image/png"});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"AI 직무 성향 검사",text:"내 AI 직무 성향 결과 🎯"})}
+    catch(e){if(e&&e.name==="AbortError")return;downloadBlob(blob);toast("공유가 안 돼 이미지로 저장했어요")}
+  }else{downloadBlob(blob);toast("이 환경에선 공유가 안 돼 이미지로 저장했어요")}
+}
+
+/* ---------------- boot ---------------- */
+function init(){questions=[];answers=[];idx=0;intro()}
+init();
+</script>
+</body>
+</html>
